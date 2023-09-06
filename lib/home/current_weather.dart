@@ -107,7 +107,23 @@ class _WeatherActions extends ConsumerWidget {
               ],
               onChanged: (city) {
                 if (city != null) {
-                  ref.read(homeController.notifier).addCity(city);
+                  ref.read(homeController.notifier).addCity(city).then(
+                    (message) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            message ?? '${city.name} added',
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: theme.colorScheme.onPrimary,
+                            ),
+                          ),
+                          backgroundColor: message == null
+                              ? theme.colorScheme.primary
+                              : theme.colorScheme.error,
+                        ),
+                      );
+                    },
+                  );
                 }
               },
             ),
@@ -142,19 +158,16 @@ class _WeatherActions extends ConsumerWidget {
             ref
                 .read(homeController.notifier)
                 .removeCity(cityName)
-                .then((success) {
-              final message =
-                  success ? '$cityName removed' : 'Failed to remove $cityName';
-
+                .then((message) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: Text(
-                    message,
+                    message ?? '$cityName removed',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onPrimary,
                     ),
                   ),
-                  backgroundColor: success
+                  backgroundColor: message == null
                       ? theme.colorScheme.primary
                       : theme.colorScheme.error,
                 ),

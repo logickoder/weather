@@ -45,8 +45,12 @@ class HomeController extends AutoDisposeNotifier<HomeState> {
   }
 
   /// Adds a city to the list of saved cities.
-  Future<void> addCity(City city) async {
+  Future<String?> addCity(City city) async {
     try {
+      // if the city is already saved, return
+      if (state.weathers.any((w) => w.city == city)) {
+        return '${city.name} is already added.';
+      }
       // fetch the weather for the city
       final weather = await WeatherService.fetchWeather(city);
       // save the city
@@ -55,19 +59,21 @@ class HomeController extends AutoDisposeNotifier<HomeState> {
       state = state.copyWith(
         weathers: state.weathers + [weather],
       );
+      return null;
     } catch (error, stackTrace) {
       logger.e(error, stackTrace: stackTrace);
+      return error.toString();
     }
   }
 
   /// Removes a city from the list of saved cities.
-  Future<bool> removeCity(String cityName) async {
+  Future<String?> removeCity(String cityName) async {
     try {
       // get the saved cities
       final cities = await CityService.fetchSavedCities();
       // return false if their is only one city left
       if (cities.length == 1) {
-        return false;
+        return 'Cannot remove the last city.';
       }
       final city = cities.firstWhere((c) => c.name == cityName);
       // remove the city
@@ -76,10 +82,10 @@ class HomeController extends AutoDisposeNotifier<HomeState> {
       state = state.copyWith(
         weathers: state.weathers.where((w) => w.city != city).toList(),
       );
-      return true;
+      return null;
     } catch (error, stackTrace) {
       logger.e(error, stackTrace: stackTrace);
-      return false;
+      return error.toString();
     }
   }
 }
