@@ -57,4 +57,26 @@ class Weather {
       "cloudiness": cloudiness,
     };
   }
+
+  Weather copyWith({
+    String? description,
+    String? icon,
+    double? temperature,
+    City? city,
+    double? windSpeed,
+    int? humidity,
+    int? pressure,
+    int? cloudiness,
+  }) {
+    return Weather(
+      description: description ?? this.description,
+      icon: icon ?? this.icon,
+      temperature: temperature ?? this.temperature,
+      city: city ?? this.city,
+      windSpeed: windSpeed ?? this.windSpeed,
+      humidity: humidity ?? this.humidity,
+      pressure: pressure ?? this.pressure,
+      cloudiness: cloudiness ?? this.cloudiness,
+    );
+  }
 }

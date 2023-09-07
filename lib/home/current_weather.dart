@@ -30,22 +30,23 @@ class CurrentWeather extends ConsumerWidget {
         borderRadius: BorderRadius.circular(30),
       ),
       padding: const EdgeInsets.symmetric(vertical: AppDimens.padding),
-      child: FractionallySizedBox(
-        widthFactor: AppDimens.widthFactor,
-        child: weather == null
-            ? const CircularProgressIndicator()
-            : Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  _WeatherAction(cityName: weather.city.name),
-                  const _WeatherDate(),
-                  _WeatherTemp(
-                    temperature: weather.temperature,
-                    description: weather.description,
-                  ),
-                ],
+      child: weather == null
+          ? Center(
+              child: CircularProgressIndicator(
+                color: Theme.of(context).colorScheme.onPrimary,
               ),
-      ),
+            )
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                _WeatherAction(cityName: weather.city.name),
+                const _WeatherDate(),
+                _WeatherTemp(
+                  temperature: weather.temperature,
+                  description: weather.description,
+                ),
+              ],
+            ),
     );
   }
 }
@@ -145,7 +146,14 @@ class _WeatherAction extends ConsumerWidget {
           ],
           onChanged: (city) {
             if (city != null) {
-              ref.read(homeController.notifier).addCity(city);
+              ref.read(homeController.notifier).getWeatherForLocation(
+                    city,
+                    (message, action) => _showLocationRationaleDialog(
+                      context,
+                      message,
+                      action,
+                    ),
+                  );
             }
           },
         ),
@@ -168,6 +176,52 @@ class _WeatherAction extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Future<void> _showLocationRationaleDialog(
+    BuildContext context,
+    String message,
+    Future Function() action,
+  ) async {
+    final theme = Theme.of(context);
+    await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        title: Text(
+          'Location Request',
+          style: theme.textTheme.bodyLarge,
+        ),
+        content: Text(
+          message,
+          style: theme.textTheme.bodyLarge,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(
+              backgroundColor: theme.colorScheme.error,
+            ),
+            child: Text('Cancel',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  color: theme.colorScheme.onError,
+                )),
+          ),
+          TextButton(
+            onPressed: () => action().then((value) => Navigator.pop(context)),
+            style: TextButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+            ),
+            child: Text(
+              'OK',
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onPrimary,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

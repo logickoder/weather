@@ -15,16 +15,18 @@ class SavedCities extends ConsumerWidget {
         (state) => state.weathers,
       ),
     );
-    return PageView.builder(
-      itemCount: cities.length,
-      itemBuilder: (_, index) => FractionallySizedBox(
-        widthFactor: AppDimens.widthFactor,
-        child: CurrentWeatherCarousel(
-          weather: cities[index],
-          currentPage: index,
-          pageCount: cities.length,
-        ),
-      ),
-    );
+    return cities.isEmpty
+        ? const Center(child: CircularProgressIndicator())
+        : PageView.builder(
+            itemCount: cities.length,
+            itemBuilder: (_, index) => FractionallySizedBox(
+              widthFactor: AppDimens.widthFactor,
+              child: CurrentWeatherCarousel(
+                weather: cities[index],
+                currentPage: index,
+                pageCount: cities.length,
+              ),
+            ),
+          );
   }
 }

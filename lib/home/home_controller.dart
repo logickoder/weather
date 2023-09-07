@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app/data/models/city.dart';
-import '../app/data/models/weather.dart';
 import '../app/services/city_service.dart';
+import '../app/services/location_service.dart';
 import '../app/services/logger_service.dart';
 import '../app/services/weather_service.dart';
 import 'home_state.dart';
@@ -20,25 +20,29 @@ class HomeController extends AutoDisposeNotifier<HomeState> {
 
   @override
   HomeState build() {
-    _fetchSavedCities();
-    _fetchAvailableCities();
+    Future.microtask(() async {
+      // fetch the available cities
+      await _fetchAvailableCities();
+      // fetch the saved cities
+      await _fetchSavedCities();
+    });
     return const HomeState();
   }
 
   /// Fetches the weather for the saved cities
   Future<void> _fetchSavedCities() async {
-    final List<Weather> data = [];
     final cities = await CityService.fetchSavedCities();
     // fetch the weather for each city
     for (final city in cities) {
       try {
-        data.add(await WeatherService.fetchWeather(city));
+        // update the state with the weather for the city
+        state = state.copyWith(
+          weathers: state.weathers + [await WeatherService.fetchWeather(city)],
+        );
       } catch (error, stackTrace) {
         logger.e(error, stackTrace: stackTrace);
       }
     }
-    // update the state
-    state = state.copyWith(weathers: data);
   }
 
   /// Fetches the list of available cities the user can select from.
@@ -47,7 +51,7 @@ class HomeController extends AutoDisposeNotifier<HomeState> {
     // update the state
     state = state.copyWith(cities: cities);
     // update the selected location to lagos
-    await getWeatherForLocation(cities.first);
+    await getWeatherForLocation(cities.first, (_, __) {});
   }
 
   /// Adds a city to the list of saved cities.
@@ -96,13 +100,30 @@ class HomeController extends AutoDisposeNotifier<HomeState> {
   }
 
   /// Get weather for location
-  Future<void> getWeatherForLocation(City city) async {
+  Future<void> getWeatherForLocation(
+    City city,
+    Function(String, Future Function()) showLocationRationaleDialog,
+  ) async {
     try {
+      // check if the city is the current location
+      if (city == currentLocation) {
+        // get the current location
+        final position = await LocationService.getCurrentLocation(
+          showLocationRationaleDialog,
+        );
+        // update the city
+        city = city.copyWith(
+          latitude: position.latitude.toString(),
+          longitude: position.longitude.toString(),
+        );
+      }
       // fetch the weather for the city
       final weather = await WeatherService.fetchWeather(city);
       // update the state
       state = state.copyWith(
-        selectedLocation: weather,
+        selectedLocation: weather.copyWith(
+          city: city,
+        ),
       );
     } catch (error, stackTrace) {
       logger.e(error, stackTrace: stackTrace);

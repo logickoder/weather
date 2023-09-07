@@ -14,9 +14,14 @@ class HomeScreen extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(height: AppDimens.padding),
-            CurrentWeather(),
+            FractionallySizedBox(
+              widthFactor: AppDimens.widthFactor,
+              child: CurrentWeather(),
+            ),
             SizedBox(height: AppDimens.padding),
-            Expanded(child: SavedCities()),
+            Expanded(
+              child: SavedCities(),
+            ),
             SizedBox(height: AppDimens.padding),
           ],
         ),

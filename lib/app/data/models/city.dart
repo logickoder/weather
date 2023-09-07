@@ -23,6 +23,18 @@ class City {
     };
   }
 
+  City copyWith({
+    String? name,
+    String? latitude,
+    String? longitude,
+  }) {
+    return City(
+      name: name ?? this.name,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+    );
+  }
+
   @override
   int get hashCode => name.hashCode;
 
