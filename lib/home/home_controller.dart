@@ -12,6 +12,12 @@ final homeController = NotifierProvider.autoDispose<HomeController, HomeState>(
 );
 
 class HomeController extends AutoDisposeNotifier<HomeState> {
+  static City currentLocation = City(
+    name: 'Current Location',
+    latitude: '',
+    longitude: '',
+  );
+
   @override
   HomeState build() {
     _fetchSavedCities();
@@ -26,9 +32,7 @@ class HomeController extends AutoDisposeNotifier<HomeState> {
     // fetch the weather for each city
     for (final city in cities) {
       try {
-        final weather = await WeatherService.fetchWeather(city);
-        data.add(weather);
-        logger.i('Fetched weather ${weather.toJson()} for ${city.name}');
+        data.add(await WeatherService.fetchWeather(city));
       } catch (error, stackTrace) {
         logger.e(error, stackTrace: stackTrace);
       }
@@ -42,6 +46,8 @@ class HomeController extends AutoDisposeNotifier<HomeState> {
     final cities = await CityService.fetchCities();
     // update the state
     state = state.copyWith(cities: cities);
+    // update the selected location to lagos
+    await getWeatherForLocation(cities.first);
   }
 
   /// Adds a city to the list of saved cities.
@@ -86,6 +92,20 @@ class HomeController extends AutoDisposeNotifier<HomeState> {
     } catch (error, stackTrace) {
       logger.e(error, stackTrace: stackTrace);
       return error.toString();
+    }
+  }
+
+  /// Get weather for location
+  Future<void> getWeatherForLocation(City city) async {
+    try {
+      // fetch the weather for the city
+      final weather = await WeatherService.fetchWeather(city);
+      // update the state
+      state = state.copyWith(
+        selectedLocation: weather,
+      );
+    } catch (error, stackTrace) {
+      logger.e(error, stackTrace: stackTrace);
     }
   }
 }

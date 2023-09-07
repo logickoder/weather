@@ -17,17 +17,12 @@ class SavedCities extends ConsumerWidget {
     );
     return PageView.builder(
       itemCount: cities.length,
-      itemBuilder: (_, index) => Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: AppDimens.padding,
-        ),
-        child: FractionallySizedBox(
-          widthFactor: AppDimens.widthFactor,
-          child: CurrentWeather(
-            weather: cities[index],
-            currentPage: index,
-            pageCount: cities.length,
-          ),
+      itemBuilder: (_, index) => FractionallySizedBox(
+        widthFactor: AppDimens.widthFactor,
+        child: CurrentWeatherCarousel(
+          weather: cities[index],
+          currentPage: index,
+          pageCount: cities.length,
         ),
       ),
     );

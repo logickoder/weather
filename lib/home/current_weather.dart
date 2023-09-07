@@ -8,14 +8,54 @@ import '../app/core/colors.dart';
 import '../app/core/dimens.dart';
 import '../app/data/models/weather.dart';
 import '../app/widgets/custom_dropdown.dart';
+import '../app/widgets/pager_indicator.dart';
 import 'home_controller.dart';
 
-class CurrentWeather extends StatelessWidget {
+class CurrentWeather extends ConsumerWidget {
+  const CurrentWeather({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final weather = ref.watch(
+      homeController.select(
+        (state) => state.selectedLocation,
+      ),
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primary,
+        borderRadius: BorderRadius.circular(30),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: AppDimens.padding),
+      child: FractionallySizedBox(
+        widthFactor: AppDimens.widthFactor,
+        child: weather == null
+            ? const CircularProgressIndicator()
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  _WeatherAction(cityName: weather.city.name),
+                  const _WeatherDate(),
+                  _WeatherTemp(
+                    temperature: weather.temperature,
+                    description: weather.description,
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+}
+
+class CurrentWeatherCarousel extends StatelessWidget {
   final Weather weather;
   final int currentPage;
   final int pageCount;
 
-  const CurrentWeather({
+  const CurrentWeatherCarousel({
     super.key,
     required this.weather,
     required this.currentPage,
@@ -39,22 +79,26 @@ class CurrentWeather extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            _WeatherActions(
+            _WeatherCarouselActions(
               currentPage: currentPage,
               pageCount: pageCount,
               cityName: weather.city.name,
             ),
-            FractionallySizedBox(
-              widthFactor: 0.6,
-              child: _WeatherIcon(
-                iconUrl: weather.icon,
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: _WeatherIcon(
+                    iconUrl: weather.icon,
+                  ),
+                ),
+                Expanded(
+                  child: _WeatherTemp(
+                    temperature: weather.temperature,
+                    description: weather.description,
+                  ),
+                ),
+              ],
             ),
-            _WeatherTemp(
-              temperature: weather.temperature,
-              description: weather.description,
-            ),
-            const SizedBox(height: AppDimens.padding),
             Divider(
               color: Theme.of(context).colorScheme.onPrimary,
               thickness: 1,
@@ -68,15 +112,76 @@ class CurrentWeather extends StatelessWidget {
   }
 }
 
-class _WeatherActions extends ConsumerWidget {
+class _WeatherAction extends ConsumerWidget {
+  final String cityName;
+
+  const _WeatherAction({
+    required this.cityName,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
+    final cities = ref.watch(
+      homeController.select(
+        // add current location to the list of cities
+        (state) => [HomeController.currentLocation] + state.cities,
+      ),
+    );
+
+    return CustomDropdown(
+      dropdown: (dropdownKey) => DropdownButtonHideUnderline(
+        child: DropdownButton(
+          key: dropdownKey(),
+          items: [
+            for (final city in cities)
+              DropdownMenuItem(
+                value: city,
+                child: Text(
+                  city.name,
+                  style: theme.textTheme.bodyLarge,
+                ),
+              ),
+          ],
+          onChanged: (city) {
+            if (city != null) {
+              ref.read(homeController.notifier).addCity(city);
+            }
+          },
+        ),
+      ),
+      child: (openDropdown) => TextButton(
+        onPressed: openDropdown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              cityName,
+              style: theme.textTheme.bodyLarge?.copyWith(
+                color: theme.colorScheme.onPrimary,
+              ),
+            ),
+            const SizedBox(width: AppDimens.padding / 2),
+            Icon(
+              Icons.arrow_drop_down,
+              color: theme.colorScheme.onPrimary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _WeatherCarouselActions extends ConsumerWidget {
   final int currentPage;
   final int pageCount;
   final String cityName;
 
-  const _WeatherActions({
+  const _WeatherCarouselActions({
+    required this.cityName,
     required this.currentPage,
     required this.pageCount,
-    required this.cityName,
   });
 
   @override
@@ -147,7 +252,7 @@ class _WeatherActions extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: AppDimens.padding / 4),
-            _PagerIndicator(
+            PagerIndicator(
               currentPage: currentPage,
               pageCount: pageCount,
             ),
@@ -202,6 +307,43 @@ class _WeatherIcon extends StatelessWidget {
   }
 }
 
+class _WeatherDate extends StatelessWidget {
+  const _WeatherDate();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final date = DateTime.now();
+    final day = DateFormat('EEEE').format(date);
+    final month = DateFormat('MMMM').format(date);
+    return IntrinsicHeight(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            day,
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onPrimary,
+            ),
+          ),
+          const SizedBox(width: AppDimens.padding / 2),
+          VerticalDivider(
+            color: theme.colorScheme.onPrimary,
+            thickness: 1,
+          ),
+          const SizedBox(width: AppDimens.padding / 2),
+          Text(
+            '$month ${date.day}',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onPrimary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _WeatherTemp extends StatelessWidget {
   final double temperature;
   final String description;
@@ -214,44 +356,16 @@ class _WeatherTemp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final date = DateTime.now();
-    final day = DateFormat('EEEE').format(date);
-    final month = DateFormat('MMMM').format(date);
 
     return Column(
       children: [
-        IntrinsicHeight(
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                day,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onPrimary,
-                ),
-              ),
-              const SizedBox(width: AppDimens.padding / 2),
-              VerticalDivider(
-                color: theme.colorScheme.onPrimary,
-                thickness: 1,
-              ),
-              const SizedBox(width: AppDimens.padding / 2),
-              Text(
-                '$month ${date.day}',
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  color: theme.colorScheme.onPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
             '${temperature.toStringAsFixed(2)}°',
             style: theme.textTheme.displayLarge?.copyWith(
               color: theme.colorScheme.onPrimary,
-              fontWeight: FontWeight.w600,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -276,7 +390,7 @@ class _WeatherExtraInfo extends StatelessWidget {
     final items = [
       _WeatherExtraInfoData(
         label: 'Wind',
-        value: '${weather.windSpeed} km/hr',
+        value: '${weather.windSpeed.toStringAsFixed(2)} km/hr',
         icon: Icons.speed,
       ),
       _WeatherExtraInfoData(
@@ -312,42 +426,6 @@ class _WeatherExtraInfo extends StatelessWidget {
           )
           .expand((element) => element)
           .toList(),
-    );
-  }
-}
-
-class _PagerIndicator extends StatelessWidget {
-  final int currentPage;
-  final int pageCount;
-
-  const _PagerIndicator({
-    required this.currentPage,
-    required this.pageCount,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(
-        pageCount,
-        (index) => Container(
-          width: 8,
-          height: 8,
-          margin: const EdgeInsets.symmetric(horizontal: 4),
-          decoration: BoxDecoration(
-            color: index == currentPage
-                ? theme.colorScheme.onPrimary
-                : Colors.transparent,
-            shape: BoxShape.circle,
-            border: Border.all(
-              color: theme.colorScheme.onPrimary,
-              width: 1,
-            ),
-          ),
-        ),
-      ),
     );
   }
 }
