@@ -1,18 +1,20 @@
 import 'dart:convert';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 
+import '../core/assets.dart';
 import '../data/models/city.dart';
 import '../data/models/weather.dart';
 
 class WeatherService {
   static const _baseUrl = 'https://api.openweathermap.org/data/2.5/weather';
-  static const _appId = '1251af495dd0a5bf6c7374a3c52df6f1';
 
   static Future<Weather> fetchWeather(City city) async {
     try {
+      final appId = dotenv.env[AppAssets.weatherApiKey];
       final url = Uri.parse(
-        '$_baseUrl?lat=${city.latitude}&lon=${city.longitude}&appid=$_appId',
+        '$_baseUrl?lat=${city.latitude}&lon=${city.longitude}&appid=$appId',
       );
 
       final response = await http.get(url);
