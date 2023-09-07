@@ -15,13 +15,9 @@ the [OpenWeatherMap API](https://openweathermap.org/api) to fetch the weather da
 
 ## Screenshot
 
-![screenshot-1](screenshots/screenshot.png "Home Screen")
-
-## App Demo
-
 The apk to the app can be found in the actions tab
 
-Watch the app in action by clicking on the image below:
+Watch the app in action by clicking on the screenshot below:
 
 [![App Demo](screenshots/screenshot.png)](screenshots/screenrecording.mp4 "App Demo")
 
@@ -53,8 +49,8 @@ flutter run
 
 ## Requirements
 
-Flutter installed on your system
-Emulator or physical device for testing
+- Flutter installed on your system
+- Emulator or physical device for testing
 
 ## Contributing
 
