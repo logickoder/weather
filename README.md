@@ -60,3 +60,8 @@ sure to follow the existing code conventions and try to include tests with your 
 ## License
 
 This project is licensed under the MIT License - see the LICENSE.md file for details.
+
+## Acknowledgements
+
+- [OpenWeatherMap API](https://openweathermap.org/api)
+- [UI Design](https://www.figma.com/community/file/1047722264278445552)
